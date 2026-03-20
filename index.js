@@ -142,6 +142,7 @@ app.get('/api/captions/status/:jobId', async (req, res) => {
 
 setInterval(async () => {
         try { await fetch('https://video-tool-backend.onrender.com/api/healthz'); } catch {}
+        // v2 - MOV fix
 }, 60000);
 
 
