@@ -32,7 +32,17 @@ app.get('/api/drive/files', async (req, res) => {
                         fields: 'files(id,name,mimeType,size,modifiedTime,webViewLink,webContentLink)',
                         pageSize: 100,
               });
-              res.json({ files: response.data.files });
+              const withThumbs = await Promise.all(response.data.files.map(async (f) => {
+  const isImg = (f.mimeType && f.mimeType.startsWith('image/')) || (f.name && /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(f.name));
+  if (isImg) {
+    try {
+      const dl = await drive.files.get({ fileId: f.id, alt: 'media' }, { responseType: 'arraybuffer' });
+      return { ...f, thumb: `data:${f.mimeType||'image/jpeg'};base64,${Buffer.from(dl.data).toString('base64')}` };
+    } catch(e) { return f; }
+  }
+  return f;
+}));
+res.json({ files: withThumbs });
       } catch (e) {
               res.status(500).json({ error: e.message });
       }
